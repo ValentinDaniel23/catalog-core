@@ -11,6 +11,7 @@ test -d repos/libs/nginx || git clone https://github.com/unikraft/lib-nginx repo
 test -d repos/libs/python3 || git clone https://github.com/unikraft/lib-python3 repos/libs/python3
 test -d repos/libs/click || git clone https://github.com/unikraft/lib-click.git repos/libs/click
 test -d repos/libs/libelf || git clone https://github.com/unikraft/lib-libelf repos/libs/libelf
+test -d repos/libs/leveldb || git clone https://github.com/ValentinDaniel23/lib-leveldb.git repos/libs/leveldb
 test -d repos/apps/elfloader || git clone https://github.com/unikraft/app-elfloader repos/apps/elfloader
 test -d repos/libs/redis || git clone https://github.com/unikraft/lib-redis repos/libs/redis
 test -d repos/libs/wamr || git clone https://github.com/unikraft/lib-wamr repos/libs/wamr
