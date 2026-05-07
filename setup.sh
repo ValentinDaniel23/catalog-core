@@ -1,6 +1,6 @@
 #!/bin/sh
 
-test -d repos/unikraft || git clone https://github.com/unikraft/unikraft repos/unikraft
+test -d repos/unikraft || git clone -b plat/ectx-cxx-linkage-fix https://github.com/ValentinDaniel23/unikraft.git repos/unikraft
 test -d repos/libs/musl || git clone https://github.com/unikraft/lib-musl repos/libs/musl
 test -d repos/libs/lwip || git clone https://github.com/unikraft/lib-lwip repos/libs/lwip
 test -d repos/libs/libcxx || git clone https://github.com/unikraft/lib-libcxx repos/libs/libcxx
@@ -15,3 +15,4 @@ test -d repos/apps/elfloader || git clone https://github.com/unikraft/app-elfloa
 test -d repos/libs/redis || git clone https://github.com/unikraft/lib-redis repos/libs/redis
 test -d repos/libs/wamr || git clone https://github.com/unikraft/lib-wamr repos/libs/wamr
 test -d repos/libs/sqlite || git clone https://github.com/unikraft/lib-sqlite repos/libs/sqlite
+test -d repos/libs/rocksdb || git clone https://github.com/ValentinDaniel23/lib-rocksdb.git repos/libs/rocksdb
