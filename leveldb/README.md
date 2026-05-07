@@ -1,113 +1,124 @@
 # LevelDB on Unikraft
 
-Build and run a small native LevelDB smoke test on Unikraft.
+Build and run LevelDB on Unikraft.
+Follow the instructions below to set up, configure, build and run LevelDB.
+Make sure you installed the [requirements](../README.md#requirements).
 
-This application uses the external `lib-leveldb` port repository cloned under
-`../repos/libs/leveldb`.
+## Quick Setup (aka TLDR)
 
-The `lib-leveldb` repository provides the library port itself.
-This `catalog-core/leveldb` directory provides a small runnable application
-that runs the shared LevelDB benchmark workload on Unikraft.
+For a quick setup, run the commands below.
+Note that you still need to install the [requirements](../README.md#requirements).
+Before everything, make sure you run the [top-level `setup.sh` script](../setup.sh).
+
+To build and run the application for `x86_64`, use the commands below:
+
+```console
+./setup.sh
+make distclean
+UK_DEFCONFIG="$PWD/qemu.x86_64.defconfig" make defconfig
+make -j $(nproc)
+qemu-system-x86_64 \
+    -enable-kvm \
+    -nographic \
+    -m 1024 \
+    -cpu max \
+    -kernel workdir/build/leveldb_qemu-x86_64
+```
+
+This will configure, build and run LevelDB on Unikraft.
+
+Information about every step and about other types of builds is detailed below.
 
 ## Set Up
 
-Run the top-level catalog setup once:
+Set up the required repositories.
+For this, you have two options:
 
-```console
-cd ..
-./setup.sh
-cd leveldb
-```
+1. Use the `setup.sh` script:
 
-Then prepare the app workdir:
+   ```console
+   ./setup.sh
+   ```
 
-```console
-./setup.sh
-```
+   It will create symbolic links to the required repositories in `../repos/`.
+   Be sure to run the [top-level `setup.sh` script](../setup.sh).
 
-The app setup script links:
+   If you want use a custom variant of repositories (e.g. apply your own patch, make modifications), update it accordingly in the `../repos/` directory.
 
-- `workdir/unikraft` from `../repos/unikraft`
-- C++ runtime libraries from `../repos/libs/`
-- `workdir/libs/leveldb -> ../../../repos/libs/leveldb`
+1. Have your custom setup of repositories in the `workdir/` directory.
+   Clone, update and customize repositories to your own needs.
 
-## Configure
+## Clean
 
-Use the usual Unikraft flow:
+While not strictly required, it is safest to clean the previous build artifacts:
 
 ```console
 make distclean
+```
+
+## Configure
+
+To configure the kernel, use:
+
+```console
 make menuconfig
 ```
 
-Choose the target architecture and platform in `menuconfig`.
-The `APPLEVELDB` option defaults to enabled, so the demo app and `LIBLEVELDB`
-should already be selected.
+In the console menu interface, choose the target architecture (x86_64 or ARMv8 or ARMv7) and platform (Xen or KVM/QEMU or KVM/Firecracker).
+
+The end result will be the creation of the `.config` configuration file.
 
 ## Build
+
+Build the application for the current configuration:
 
 ```console
 make -j $(nproc)
 ```
 
-This creates the unikernel image under `workdir/build/`.
+This results in the creation of the `workdir/build/` directory storing the build artifacts.
+The unikernel application image file is `workdir/build/leveldb_<plat>-<arch>`, where `<plat>` is the platform name (`qemu`, `fc`, `xen`), and `<arch>` is the architecture (`x86_64` or `arm64`).
 
-## Run on QEMU/x86_64
+## Run
+
+Run the resulting image using the corresponding platform tool.
+Firecracker requires KVM support.
+Xen requires a system with Xen installed.
+
+A successful run prints something like:
+
+```text
+leveldb: hello=unikraft
+```
+
+This means that LevelDB opened the database, wrote a key/value pair, read it
+back, and exited successfully.
+
+You can override the database path and key/value via arguments:
+`-- <db_path> <key> <value>`.
+
+### Run on QEMU/x86_64
+
+Run the Unikraft image:
 
 ```console
 qemu-system-x86_64 \
-  -nographic \
-  -m 1024 \
-  -cpu max \
-  -kernel workdir/build/leveldb_qemu-x86_64
+    -enable-kvm \
+    -nographic \
+    -m 1024 \
+    -cpu max \
+    -kernel workdir/build/leveldb_qemu-x86_64
 ```
 
-## Run on QEMU/ARM64
+### Run on QEMU/ARM64
+
+Run the Unikraft image:
 
 ```console
 qemu-system-aarch64 \
-  -nographic \
-  -machine virt \
-  -m 1024 \
-  -cpu max \
-  -kernel workdir/build/leveldb_qemu-arm64
+    -nographic \
+    -machine virt \
+    -m 1024 \
+    -cpu max \
+    -kernel workdir/build/leveldb_qemu-arm64
 ```
-
-## Expected Output
-
-The app runs the shared LevelDB benchmark workload against the logical
-`/leveldb-benchmark-db` database name in LevelDB's in-memory environment and
-exits with status `0`.
-
-In the current workspace configuration, the demo progress is emitted through
-Unikraft kernel log messages instead of plain `stdout`, so the output appears
-with `ERR: [appleveldb]` prefixes.
-
-Look for output similar to:
-
-```text
-[    0.xxxxxx] ERR:  [appleveldb] <main.cpp @   33> Opening /leveldb-demo
-[    0.xxxxxx] ERR:  [appleveldb] <main.cpp @ ...> BENCHMARK|EVENT=READY
-[    0.xxxxxx] ERR:  [appleveldb] <main.cpp @ ...> BENCHMARK|EVENT=OPEN_DONE|duration_us=...
-[    0.xxxxxx] ERR:  [appleveldb] <main.cpp @ ...> BENCHMARK|EVENT=WRITE_DONE|duration_us=...|count=1000000
-[    0.xxxxxx] ERR:  [appleveldb] <main.cpp @ ...> BENCHMARK|EVENT=RANDOM_READ_DONE|duration_us=...|count=1000000
-[    0.xxxxxx] ERR:  [appleveldb] <main.cpp @ ...> BENCHMARK|EVENT=ITERATE_DONE|duration_us=...|count=1000000
-[    0.xxxxxx] ERR:  [appleveldb] <main.cpp @ ...> BENCHMARK|EVENT=DELETE_DONE|duration_us=...|count=1000000
-[    0.xxxxxx] ERR:  [appleveldb] <main.cpp @ ...> BENCHMARK|EVENT=BENCH_DONE|duration_us=...|count=1
-```
-
-## Benchmarking
-
-The shared benchmark workflow lives under:
-
-```text
-../../proiect/benchmarks/leveldb/
-```
-
-Use:
-
-```console
-python3 ../../proiect/benchmarks/leveldb/run_benchmarks.py
-```
-
-to build, run, and summarize the native versus Unikraft benchmark results.
