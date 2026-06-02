@@ -1,46 +1,73 @@
 # RocksDB on Unikraft
 
-Build and run RocksDB on Unikraft.
-This application uses the local `libs/lib-rocksdb` port and the upstream
-RocksDB source tree at `repos/rocksdb`.
+RocksDB catalog application and validation harness for Unikraft.
 
-Make sure you installed the [requirements](../README.md#requirements).
+## Layout
 
-## Quick Setup (aka TLDR)
+- app: `catalog-core/rocksdb`
+- RocksDB port (preferred): `libs/lib-rocksdb`
+- RocksDB port (legacy fallback): `libs/rocksdb`
 
-Before everything, make sure you have the required repositories in `../repos/`.
-If you are using this thesis workspace layout, that means having:
+The app `Makefile` auto-detects the library location so branch changes do not
+break builds.
 
-- `repos/unikraft`
-- `repos/libs/` ports required by your chosen platform/toolchain
-- `repos/rocksdb` (already present here)
-
-To build and run the application for `x86_64` with QEMU, use the commands below:
+## Build (QEMU x86_64)
 
 ```console
 ./setup.sh
 make distclean
 UK_DEFCONFIG="$PWD/qemu.x86_64.defconfig" make defconfig
-make -j $(nproc)
-./workdir/unikraft/support/scripts/mkcpio initrd.cpio ./rootfs/
-qemu-system-x86_64 \
-    -enable-kvm \
-    -nographic \
-    -m 256M \
-    -kernel workdir/build/rocksdb_qemu-x86_64 \
-    -append "rocksdb_qemu-x86_64 vfs.fstab=[ \"initrd0:/:extract::ramfs=1:\" ] -- /data/rocksdb hello unikraft" \
-    -initrd ./initrd.cpio
+make -j "$(nproc)"
 ```
 
-A successful run prints something like:
+## Runtime CLI
 
 ```text
-rocksdb: hello=unikraft
+--db=<path>
+--checkpoint=<path>
+--feature=basic|batch|flush|snapshot|iterator|delete|reopen|checkpoint
+--storage=<name>
+--no-clean
+--no-phase-logs
+--help
 ```
 
-## Notes
+Notes:
 
-- The default database path is `/data/rocksdb`. The app creates `/data` if it
-  does not exist.
-- You can override the database path and the key/value via arguments:
-  `-- <db_path> <key> <value>`.
+- With no `--feature` flags, the app runs the full feature-debug bundle.
+- `--checkpoint=<path>` chooses where RocksDB writes the checkpoint copy.
+- A standalone `--` token is accepted for compatibility, but not required.
+
+## Feature Debugging
+
+- `basic`: open + put/get sanity.
+- `batch`: `WriteBatch` semantics.
+- `flush`: explicit `Flush()` validation.
+- `snapshot`: point-in-time read validation.
+- `iterator`: iterator traversal validation.
+- `delete`: delete semantics.
+- `reopen`: reopen the DB and verify persisted state.
+- `checkpoint`: create and reopen an on-disk checkpoint.
+
+## Automated Validation
+
+Run the full matrix automatically:
+
+```console
+./validate.sh
+```
+
+If KVM is unavailable, use TCG:
+
+```console
+QEMU_ACCEL="-accel tcg" ./validate.sh
+```
+
+If you want explicit manual commands, see `commands.txt`.
+
+Use the app modes:
+
+- `--persist-write` to write a marker
+- reboot with the same DB path/backend
+- `--persist-check` to verify marker
+- `--persist-clean` to remove test data

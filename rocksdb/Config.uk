@@ -1,30 +1,29 @@
-# Configure RocksDB application for a build that uses initrd to pass the root
-# filesystem.
-
 config APPROCKSDB
-bool "Configure RocksDB application with initrd as rootfs"
+bool "Configure RocksDB demo application"
 default y
-	# Select RocksDB library and its main function.
 	select LIBROCKSDB
-	select LIBROCKSDB_MAIN_FUNCTION
 
-	# Select C++ toolchain and runtime dependencies.
+	# C++ runtime stack
 	select LIBCOMPILER_RT
 	select LIBCXX
 	select LIBCXXABI
 	select LIBUNWIND
 	select LIBMUSL
 
-	# Select filesystem core components: vfscore, cpio, ramfs.
+	# Filesystem stack
 	select LIBVFSCORE
 	select LIBVFSCORE_AUTOMOUNT_UP
+	select LIBVFSCORE_AUTOMOUNT_FB
 	select LIBRAMFS
-	select LIBUKCPIO
-
-	# Timekeeping is commonly required by RocksDB for stats and scheduling.
-	select LIBUKTIME
-
-	# Provide /dev/stdout so RocksDB logging and printf output have a device.
 	select LIBDEVFS
 	select LIBDEVFS_AUTOMOUNT
 	select LIBDEVFS_DEVSTDOUT
+
+	# Timekeeping
+	select LIBUKTIME
+
+config LIBVFSCORE_AUTOMOUNT_FB0_MP
+	default "/"
+
+config LIBVFSCORE_AUTOMOUNT_FB0_DRIVER
+	default "ramfs"

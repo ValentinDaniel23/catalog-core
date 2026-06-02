@@ -1,0 +1,4 @@
+$(eval $(call addlib,approcksdb))
+
+APPROCKSDB_SRCS-y += $(APPROCKSDB_BASE)/main.cpp
+APPROCKSDB_CXXFLAGS-y += -std=c++20

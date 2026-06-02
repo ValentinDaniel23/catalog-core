@@ -3,4 +3,5 @@ initrd.cpio
 firecracker.socket
 .config
 .config.old
-
+commands.txt
+local_script.sh

@@ -1,7 +1,7 @@
 {
   "boot-source": {
     "kernel_image_path": "workdir/build/rocksdb_fc-x86_64",
-    "boot_args": "rocksdb_fc-x86_64 vfs.fstab=[ \"initrd0:/:extract::ramfs=1:\" ] -- /data/rocksdb hello unikraft",
+    "boot_args": "rocksdb_fc-x86_64 vfs.fstab=[ \"initrd0:/:extract::ramfs=1:\" ] --storage=initrd --db=/rocksdb-demo --feature=basic",
     "initrd_path": "initrd.cpio"
   },
   "drives": [],
@@ -12,4 +12,3 @@
     "track_dirty_pages": false
   }
 }
-
