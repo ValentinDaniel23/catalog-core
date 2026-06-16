@@ -1,13 +1,13 @@
 {
   "boot-source": {
     "kernel_image_path": "workdir/build/rocksdb_fc-arm64",
-    "boot_args": "rocksdb_fc-arm64 vfs.fstab=[ \"initrd0:/:extract::ramfs=1:\" ] --storage=initrd --db=/rocksdb-demo --feature=basic",
+    "boot_args": "rocksdb_fc-arm64 -- --storage=initrd --db=/rocksdb-demo --all-features",
     "initrd_path": "initrd.cpio"
   },
   "drives": [],
   "machine-config": {
     "vcpu_count": 1,
-    "mem_size_mib": 256,
+    "mem_size_mib": 512,
     "smt": false,
     "track_dirty_pages": false
   }
