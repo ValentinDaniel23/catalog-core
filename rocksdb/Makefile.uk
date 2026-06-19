@@ -1,5 +1,4 @@
 $(eval $(call addlib,approcksdb))
 
-APPROCKSDB_SRCS-y += $(wildcard $(APPROCKSDB_BASE)/src/*.cpp)
-APPROCKSDB_SRCS-y += $(wildcard $(APPROCKSDB_BASE)/src/features/*.cpp)
-APPROCKSDB_CXXFLAGS-y += -std=c++20 -I$(APPROCKSDB_BASE)/include
+APPROCKSDB_SRCS-y += $(APPROCKSDB_BASE)/src/main.cpp
+APPROCKSDB_CXXFLAGS-y += -std=c++20

@@ -2,6 +2,8 @@ config APPROCKSDB
 bool "Configure RocksDB demo application"
 default y
 	select LIBROCKSDB
+	select LIBROCKSDBTEST
+	select LIBROCKSDBTEST_ALL
 
 	# C++ runtime stack
 	select LIBCOMPILER_RT
@@ -15,6 +17,7 @@ default y
 	select LIBVFSCORE_AUTOMOUNT_UP
 	select LIBVFSCORE_AUTOMOUNT_FB
 	select LIBRAMFS
+	select LIBUKCPIO
 	select LIBDEVFS
 	select LIBDEVFS_AUTOMOUNT
 	select LIBDEVFS_DEVSTDOUT
