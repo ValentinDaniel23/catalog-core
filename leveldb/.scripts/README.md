@@ -54,3 +54,13 @@ e.g.
 ./.scripts/run/fc.x86_64
 ./.scripts/run/fc.arm64
 ```
+
+## Test all platforms
+
+```console
+./.scripts/test/all.sh
+```
+
+Runs `setup.sh`, then builds and runs all platforms sequentially. Logs are
+saved to `.scripts/test/log/`. `fc.arm64` is build-only (cannot run on an
+x86_64 host).
