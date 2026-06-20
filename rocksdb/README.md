@@ -20,7 +20,7 @@ To build and run the application for `x86_64`, use the commands below:
 ```console
 ./setup.sh
 make distclean
-UK_DEFCONFIG="$PWD/qemu.x86_64.defconfig" make defconfig
+UK_DEFCONFIG="$PWD/.scripts/defconfig/qemu.x86_64" make defconfig
 make -j $(nproc)
 test -f initrd.cpio || ./workdir/unikraft/support/scripts/mkcpio initrd.cpio ./rootfs/
 qemu-system-x86_64 \
@@ -41,7 +41,7 @@ To do the same for `AArch64`, run the commands below:
 ```console
 ./setup.sh
 make distclean
-UK_DEFCONFIG="$PWD/qemu.arm64.defconfig" make defconfig
+UK_DEFCONFIG="$PWD/.scripts/defconfig/qemu.arm64" make defconfig
 make -j $(nproc)
 test -f initrd.cpio || ./workdir/unikraft/support/scripts/mkcpio initrd.cpio ./rootfs/
 qemu-system-aarch64 \
@@ -97,11 +97,11 @@ In the console menu interface, choose the target architecture (`x86_64` or
 The end result will be the creation of the `.config` configuration file.
 
 This app tree ships the local presets below:
-`qemu.x86_64.defconfig`, `qemu.arm64.defconfig`, `fc.x86_64.defconfig`,
-`fc.arm64.defconfig`. Load one with:
+`.scripts/defconfig/qemu.x86_64`, `.scripts/defconfig/qemu.arm64`, `.scripts/defconfig/fc.x86_64`,
+`.scripts/defconfig/fc.arm64`. Load one with:
 
 ```console
-UK_DEFCONFIG="$PWD/qemu.x86_64.defconfig" make defconfig
+UK_DEFCONFIG="$PWD/.scripts/defconfig/qemu.x86_64" make defconfig
 ```
 
 ## Build
@@ -207,7 +207,7 @@ is heavy, so enable KVM:
 
 ```console
 make distclean
-cp qemu.x86_64.defconfig /tmp/rocksdb-test.defconfig
+cp .scripts/defconfig/qemu.x86_64 /tmp/rocksdb-test.defconfig
 printf 'CONFIG_LIBROCKSDBTEST=y\nCONFIG_LIBPOSIX_PROCESS_MAX_PID=1024\n' >> /tmp/rocksdb-test.defconfig
 UK_DEFCONFIG=/tmp/rocksdb-test.defconfig make defconfig
 make -j $(nproc)
