@@ -2,12 +2,6 @@ config APPLEVELDB
 bool "Configure LevelDB demo application"
 default y
 	select LIBLEVELDB
-
-	# C++ runtime stack required by LevelDB.
-	select LIBCOMPILER_RT
-	select LIBCXX
-	select LIBCXXABI
-	select LIBUNWIND
 	select LIBMUSL
 
 	# Filesystem: vfscore + ramfs root, populated at boot from an initrd
