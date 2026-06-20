@@ -1,6 +1,7 @@
 #!/bin/sh
 
-test -d repos/unikraft || git clone -b plat/ectx-cxx-linkage-fix https://github.com/ValentinDaniel23/unikraft.git repos/unikraft
+test -d repos/unikraft || git clone -b plat/cxx-tls-fixes https://github.com/ValentinDaniel23/unikraft.git repos/unikraft
+
 test -d repos/libs/musl || git clone https://github.com/unikraft/lib-musl repos/libs/musl
 test -d repos/libs/lwip || git clone https://github.com/unikraft/lib-lwip repos/libs/lwip
 test -d repos/libs/libcxx || git clone https://github.com/unikraft/lib-libcxx repos/libs/libcxx

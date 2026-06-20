@@ -2,31 +2,25 @@ config APPROCKSDB
 bool "Configure RocksDB demo application"
 default y
 	select LIBROCKSDB
-	select LIBROCKSDBTEST
-	select LIBROCKSDBTEST_ALL
 
-	# C++ runtime stack
+	# C++ runtime stack required by RocksDB.
 	select LIBCOMPILER_RT
 	select LIBCXX
 	select LIBCXXABI
 	select LIBUNWIND
 	select LIBMUSL
 
-	# Filesystem stack
+	# Filesystem: vfscore + ramfs root, populated at boot from an initrd
+	# (cpio) via a user vfs.fstab, e.g. "initrd0:/:extract::ramfs=1:".
 	select LIBVFSCORE
 	select LIBVFSCORE_AUTOMOUNT_UP
-	select LIBVFSCORE_AUTOMOUNT_FB
 	select LIBRAMFS
 	select LIBUKCPIO
-	select LIBDEVFS
-	select LIBDEVFS_AUTOMOUNT
-	select LIBDEVFS_DEVSTDOUT
 
-	# Timekeeping
+	# Wire application stdio to the serial console.
+	select LIBUKFS
+	select LIBUKFS_DEVFS
+
+	# Timekeeping used by RocksDB.
 	select LIBUKTIME
 
-config LIBVFSCORE_AUTOMOUNT_FB0_MP
-	default "/"
-
-config LIBVFSCORE_AUTOMOUNT_FB0_DRIVER
-	default "ramfs"
