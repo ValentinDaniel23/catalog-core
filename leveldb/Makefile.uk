@@ -1,4 +1,4 @@
 $(eval $(call addlib,appleveldb))
 
-APPLEVELDB_SRCS-y += $(APPLEVELDB_BASE)/main.cpp
-APPLEVELDB_CXXFLAGS-y += -std=c++17
+APPLEVELDB_SRCS-y += $(APPLEVELDB_BASE)/src/main.cpp
+APPLEVELDB_CXXFLAGS-y += -std=c++20

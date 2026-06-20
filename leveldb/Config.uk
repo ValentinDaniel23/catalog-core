@@ -1,19 +1,25 @@
 config APPLEVELDB
 bool "Configure LevelDB demo application"
 default y
-
 	select LIBLEVELDB
 
+	# C++ runtime stack required by LevelDB.
+	select LIBCOMPILER_RT
+	select LIBCXX
+	select LIBCXXABI
+	select LIBUNWIND
+	select LIBMUSL
+
+	# Filesystem: vfscore + ramfs root, populated at boot from an initrd
+	# (cpio) via a user vfs.fstab, e.g. "initrd0:/:extract::ramfs=1:".
 	select LIBVFSCORE
 	select LIBVFSCORE_AUTOMOUNT_UP
-	select LIBVFSCORE_AUTOMOUNT_FB
 	select LIBRAMFS
-	select LIBDEVFS
-	select LIBDEVFS_AUTOMOUNT
-	select LIBDEVFS_DEVSTDOUT
+	select LIBUKCPIO
 
-config LIBVFSCORE_AUTOMOUNT_FB0_MP
-	default "/"
+	# Wire application stdio to the serial console.
+	select LIBUKFS
+	select LIBUKFS_DEVFS
 
-config LIBVFSCORE_AUTOMOUNT_FB0_DRIVER
-	default "ramfs"
+	# Timekeeping used by LevelDB.
+	select LIBUKTIME

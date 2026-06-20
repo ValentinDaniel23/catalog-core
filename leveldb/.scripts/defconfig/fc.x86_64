@@ -1,0 +1,14 @@
+CONFIG_PLAT_KVM=y
+CONFIG_KVM_VMM_FIRECRACKER=y
+CONFIG_ARCH_X86_64=y
+CONFIG_APPLEVELDB=y
+CONFIG_UK_DEFNAME="leveldb"
+CONFIG_UK_NAME="leveldb"
+
+# LevelDB is C++ with deep call stacks; enlarge the stack.
+CONFIG_STACK_SIZE_PAGE_ORDER=6
+CONFIG_OPTIMIZE_PERF=y
+
+# Uncomment for a verbose boot log (debugging).
+# CONFIG_LIBUKPRINT_KLVL_INFO=y
+# CONFIG_LIBUKPRINT_KLVL_DEBUG=y

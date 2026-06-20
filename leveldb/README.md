@@ -4,6 +4,11 @@ Build and run LevelDB on Unikraft.
 Follow the instructions below to set up, configure, build and run LevelDB.
 Make sure you installed the [requirements](../README.md#requirements).
 
+This is a C++ library port. By default the application links the LevelDB
+library and prints a short message. An optional validation suite (the upstream
+LevelDB googletest tests) can be enabled from the configuration; see the
+["Test" section](#test).
+
 ## Quick Setup (aka TLDR)
 
 For a quick setup, run the commands below.
@@ -15,19 +20,40 @@ To build and run the application for `x86_64`, use the commands below:
 ```console
 ./setup.sh
 make distclean
-UK_DEFCONFIG="$PWD/qemu.x86_64.defconfig" make defconfig
+UK_DEFCONFIG="$PWD/.scripts/defconfig/qemu.x86_64" make defconfig
 make -j $(nproc)
+test -f initrd.cpio || ./workdir/unikraft/support/scripts/mkcpio initrd.cpio ./rootfs/
 qemu-system-x86_64 \
-    -enable-kvm \
     -nographic \
-    -m 1024 \
-    -cpu max \
-    -kernel workdir/build/leveldb_qemu-x86_64
+    -kernel workdir/build/leveldb_qemu-x86_64 \
+    -append "leveldb_qemu-x86_64 vfs.fstab=[ \"initrd0:/:extract::ramfs=1:\" ] --" \
+    -initrd ./initrd.cpio
 ```
 
-This will configure, build and run LevelDB on Unikraft.
+A successful run prints:
 
-Information about every step and about other types of builds is detailed below.
+```text
+hello from the LevelDB Unikraft app
+```
+
+To do the same for `AArch64`, run the commands below:
+
+```console
+./setup.sh
+make distclean
+UK_DEFCONFIG="$PWD/.scripts/defconfig/qemu.arm64" make defconfig
+make -j $(nproc)
+test -f initrd.cpio || ./workdir/unikraft/support/scripts/mkcpio initrd.cpio ./rootfs/
+qemu-system-aarch64 \
+    -nographic \
+    -machine virt \
+    -cpu max \
+    -kernel workdir/build/leveldb_qemu-arm64 \
+    -append "leveldb_qemu-arm64 vfs.fstab=[ \"initrd0:/:extract::ramfs=1:\" ] --" \
+    -initrd ./initrd.cpio
+```
+
+Information about every step is detailed below.
 
 ## Set Up
 
@@ -43,7 +69,8 @@ For this, you have two options:
    It will create symbolic links to the required repositories in `../repos/`.
    Be sure to run the [top-level `setup.sh` script](../setup.sh).
 
-   If you want use a custom variant of repositories (e.g. apply your own patch, make modifications), update it accordingly in the `../repos/` directory.
+   If you want, you can use a custom variant of repositories (e.g. apply your own
+   patch, make modifications), update it accordingly in the `../repos/` directory.
 
 1. Have your custom setup of repositories in the `workdir/` directory.
    Clone, update and customize repositories to your own needs.
@@ -64,9 +91,18 @@ To configure the kernel, use:
 make menuconfig
 ```
 
-In the console menu interface, choose the target architecture (x86_64 or ARMv8 or ARMv7) and platform (Xen or KVM/QEMU or KVM/Firecracker).
+In the console menu interface, choose the target architecture (`x86_64` or
+`ARMv8`) and platform (`KVM/QEMU` or `KVM/Firecracker`).
 
 The end result will be the creation of the `.config` configuration file.
+
+This app tree ships the local presets below:
+`.scripts/defconfig/qemu.x86_64`, `.scripts/defconfig/qemu.arm64`, `.scripts/defconfig/fc.x86_64`,
+`.scripts/defconfig/fc.arm64`. Load one with:
+
+```console
+UK_DEFCONFIG="$PWD/.scripts/defconfig/qemu.x86_64" make defconfig
+```
 
 ## Build
 
@@ -76,49 +112,190 @@ Build the application for the current configuration:
 make -j $(nproc)
 ```
 
-This results in the creation of the `workdir/build/` directory storing the build artifacts.
-The unikernel application image file is `workdir/build/leveldb_<plat>-<arch>`, where `<plat>` is the platform name (`qemu`, `fc`, `xen`), and `<arch>` is the architecture (`x86_64` or `arm64`).
+This results in the creation of the `workdir/build/` directory storing the build
+artifacts. The unikernel application image file is
+`workdir/build/leveldb_<plat>-<arch>`, where `<plat>` is the platform name
+(`qemu` or `fc`), and `<arch>` is the architecture (`x86_64` or `arm64`).
+
+### Use a Different Compiler
+
+If you want to use a different compiler, such as Clang or a different GCC
+version, pass the `CC` variable to `make`:
+
+```console
+make properclean
+make CC=clang -j $(nproc)
+```
+
+Note that Clang >= 14 and GCC >= 8 are required to build Unikraft.
+
+### Build the Filesystem
+
+The root filesystem is packed into `initrd.cpio`, an initial RAM disk CPIO file.
+Use the command below to (re)build it from the `rootfs/` directory:
+
+```console
+rm -f initrd.cpio
+./workdir/unikraft/support/scripts/mkcpio initrd.cpio ./rootfs/
+```
+
+At boot the initrd is extracted into a writable `ramfs` mounted at `/` via the
+`vfs.fstab=[ "initrd0:/:extract::ramfs=1:" ]` argument. The validation suite
+creates its databases under this root.
 
 ## Run
 
-Run the resulting image using the corresponding platform tool.
-Firecracker requires KVM support.
-Xen requires a system with Xen installed.
-
-A successful run prints something like:
-
-```text
-leveldb: hello=unikraft
-```
-
-This means that LevelDB opened the database, wrote a key/value pair, read it
-back, and exited successfully.
-
-You can override the database path and key/value via arguments:
-`-- <db_path> <key> <value>`.
+Run the resulting image using the corresponding platform tool. Firecracker
+requires KVM support.
 
 ### Run on QEMU/x86_64
 
-Run the Unikraft image:
-
 ```console
 qemu-system-x86_64 \
-    -enable-kvm \
     -nographic \
-    -m 1024 \
-    -cpu max \
-    -kernel workdir/build/leveldb_qemu-x86_64
+    -kernel workdir/build/leveldb_qemu-x86_64 \
+    -append "leveldb_qemu-x86_64 vfs.fstab=[ \"initrd0:/:extract::ramfs=1:\" ] --" \
+    -initrd ./initrd.cpio
 ```
 
 ### Run on QEMU/ARM64
-
-Run the Unikraft image:
 
 ```console
 qemu-system-aarch64 \
     -nographic \
     -machine virt \
-    -m 1024 \
     -cpu max \
-    -kernel workdir/build/leveldb_qemu-arm64
+    -kernel workdir/build/leveldb_qemu-arm64 \
+    -append "leveldb_qemu-arm64 vfs.fstab=[ \"initrd0:/:extract::ramfs=1:\" ] --" \
+    -initrd ./initrd.cpio
+```
+
+### Run on Firecracker/x86_64
+
+```console
+rm -f firecracker.socket
+firecracker-x86_64 --config-file fc.x86_64.json --api-sock firecracker.socket
+```
+
+The shipped `fc.x86_64.json` mounts the initrd as rootfs (via `vfs.fstab` in its
+`boot_args`), so build `initrd.cpio` first (see
+["Build the Filesystem"](#build-the-filesystem)). The user running the command
+must be able to use KVM.
+
+### Run on Firecracker/ARM64
+
+```console
+rm -f firecracker.socket
+firecracker-aarch64 --config-file fc.arm64.json --api-sock firecracker.socket
+```
+
+As for `x86_64`, build `initrd.cpio` first (see
+["Build the Filesystem"](#build-the-filesystem)); the shipped `fc.arm64.json`
+mounts it as rootfs via its `boot_args`. The user running the command must be
+able to use KVM.
+
+## Test
+
+By default only the library is linked and the app just prints a message — the
+validation suite is **not** part of the binary. To run the validation suite (the
+official upstream LevelDB googletest tests, driven by the library's
+`leveldb_test_main()`), enable it from the configuration.
+
+The suite writes to the in-memory root and starts a few background threads, so
+also raise the maximum thread id and give the VM more memory. Enable KVM:
+
+```console
+make distclean
+cp .scripts/defconfig/qemu.x86_64 /tmp/leveldb-test.defconfig
+printf 'CONFIG_LIBLEVELDBTEST=y\nCONFIG_LIBPOSIX_PROCESS_MAX_PID=1024\n' >> /tmp/leveldb-test.defconfig
+UK_DEFCONFIG=/tmp/leveldb-test.defconfig make defconfig
+make -j $(nproc)
+test -f initrd.cpio || ./workdir/unikraft/support/scripts/mkcpio initrd.cpio ./rootfs/
+qemu-system-x86_64 \
+    -enable-kvm -cpu max \
+    -nographic \
+    -m 2048 \
+    -kernel workdir/build/leveldb_qemu-x86_64 \
+    -append "leveldb_qemu-x86_64 vfs.fstab=[ \"initrd0:/:extract::ramfs=1:\" ] --" \
+    -initrd ./initrd.cpio
+```
+
+A successful run shows the message followed by the googletest summary:
+
+```text
+hello from the LevelDB Unikraft app
+[==========] Running 102 tests from 17 test suites.
+...
+[  PASSED  ] 102 tests.
+main returned 0
+```
+
+To pick individual tests instead of the whole bundle, disable
+`CONFIG_LIBLEVELDBTEST_ALL` and select the ones you want
+(`CONFIG_LIBLEVELDBTEST_CODING`, `CONFIG_LIBLEVELDBTEST_CRC32C`, ...) via
+`make menuconfig`. The validation suite lives in the `lib-leveldb` library
+(gated by `CONFIG_LIBLEVELDBTEST`), not in this application.
+
+The suite drops LevelDB's multi-threaded `SkipTest.Concurrent1..5` stress tests:
+their reader thread spins without yielding and livelocks under Unikraft's
+cooperative, non-preemptive scheduler. The single-threaded
+`SkipTest.ConcurrentWithoutThreads` test is retained.
+
+### Close QEMU
+
+To close the QEMU virtual machine, use the `Ctrl+a x` keyboard shortcut;
+that is, press the `Ctrl` and `a` keys at the same time and then, separately,
+press the `x` key.
+
+## Use a Different Filesystem Type for QEMU
+
+The initrd root above is in-memory and ephemeral. You can instead back the root
+with [`9pfs`](https://github.com/unikraft/unikraft/tree/staging/lib/9pfs) over a
+host directory, which gives **persistent** storage: databases written by LevelDB
+survive on the host. Note that 9pfs does not work with Firecracker.
+
+Enable the 9p stack in the configuration (e.g. via `make menuconfig` or by
+appending to the defconfig):
+
+```text
+CONFIG_LIBUK9P=y
+CONFIG_LIB9PFS=y
+CONFIG_LIBVIRTIO_9P=y
+CONFIG_LIBVIRTIO_PCI=y
+```
+
+Then go through the [configure](#configure) and [build](#build) steps and run
+with a host directory shared over 9p (no initrd needed):
+
+```console
+mkdir -p 9pfs-root
+qemu-system-x86_64 \
+    -enable-kvm -cpu max \
+    -nographic \
+    -m 2048 \
+    -kernel workdir/build/leveldb_qemu-x86_64 \
+    -append "leveldb_qemu-x86_64 vfs.fstab=[ \"fs0:/:9pfs:::\" ] --" \
+    -fsdev local,id=myid,path=$(pwd)/9pfs-root/,security_model=none \
+    -device virtio-9p-pci,fsdev=myid,mount_tag=fs0
+```
+
+## Clean Up
+
+In order to remove the build artifacts, use:
+
+```console
+make clean
+```
+
+In order to remove fetched files also, that is the removal of the
+`workdir/build/` directory, use:
+
+```console
+make properclean
+```
+
+In order to remove the generated `.config` file as well, use:
+
+```console
+make distclean
 ```

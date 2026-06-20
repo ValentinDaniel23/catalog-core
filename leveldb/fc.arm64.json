@@ -1,11 +1,13 @@
 {
   "boot-source": {
-    "kernel_image_path": "workdir/build/leveldb_fc-arm64"
+    "kernel_image_path": "workdir/build/leveldb_fc-arm64",
+    "boot_args": "leveldb_fc-arm64 vfs.fstab=[ \"initrd0:/:extract::ramfs=1:\" ] --",
+    "initrd_path": "initrd.cpio"
   },
   "drives": [],
   "machine-config": {
     "vcpu_count": 1,
-    "mem_size_mib": 64,
+    "mem_size_mib": 512,
     "smt": false,
     "track_dirty_pages": false
   }
